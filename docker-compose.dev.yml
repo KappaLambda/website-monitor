@@ -1,0 +1,36 @@
+version: '3.7'
+
+services:
+  django:
+    container_name: wm_api_dev
+    # command: gunicorn website_monitor.wsgi:application --bind 0.0.0.0:8000 --timeout 90 --workers 3 --reload
+    command: >
+      bash -c "gunicorn website_monitor.wsgi:application --bind 0.0.0.0:8000 --timeout 90 --workers 3 --reload
+      & python manage.py rqworker default
+      & rqscheduler --host wm_redis --port 6379 --db 0 --interval 10"
+    environment:
+      - DJANGO_SETTINGS_MODULE=website_monitor.settings.dev
+    volumes:
+      - ./website_monitor/:/app/
+
+  nginx:
+    container_name: wm_nginx_dev
+    build:
+      context: .
+      dockerfile: docker/nginx/dev.Dockerfile
+    ports:
+      - "8000:8000"
+
+  frontend:
+    container_name: wm_frontend_dev
+    command: >
+      bash -c "npm install
+      && npm run dev"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./frontend/:/app/
+      - wm_node_modules:/app/node_modules/
+
+volumes:
+  wm_node_modules:

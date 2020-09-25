@@ -1,0 +1,4 @@
+.python-version
+__pycache__/
+website_monitor/staticfiles/
+.vscode/

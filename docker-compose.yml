@@ -1,0 +1,41 @@
+version: '3.7'
+
+services:
+  db:
+    container_name: wm_db
+    image: postgres:10
+    volumes:
+      - wm_data:/var/lib/postgresql/data
+    env_file: docker/django_api/.env
+
+  django:
+    build:
+      context: .
+      dockerfile: docker/django_api/Dockerfile
+    volumes:
+      - wm_backend_static:/app/staticfiles
+    env_file: docker/django_api/.env
+    depends_on:
+      - db
+      - redis
+    expose:
+      - "8000"
+
+  nginx:
+    volumes:
+      - wm_backend_static:/usr/src/backend/staticfiles
+    depends_on:
+      - django
+
+  redis:
+    container_name: wm_redis
+    image: redis:5.0
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+
+volumes:
+  wm_data:
+  wm_backend_static:
